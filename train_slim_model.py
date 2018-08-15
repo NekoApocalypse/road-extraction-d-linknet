@@ -8,47 +8,80 @@ import time
 import os
 
 
-CKPT_RES50 = './pretrained-checkpoint/resnet_v1_50.ckpt'
-SAVE_DIR = './model'
-SUMMARY_DIR = './summary'
+FLAGS = tf.app.flags.FLAGS
+tf.app.flags.DEFINE_string('summary_dir', './summary', 'path to store summary')
+tf.app.flags.DEFINE_string(
+    'CKPT_RES50', './pretrained-checkpoint/resnet_v1_50.ckpt',
+    'path to pre-trained res50 model')
+tf.app.flags.DEFINE_string('save_dir', './model', 'path to save model')
+tf.app.flags.DEFINE_string('resume_dir', '', 'path to resume training')
+tf.app.flags.DEFINE_boolean(
+    'no_append', False,
+    'If false, create sub folder with time string under save_dir')
+tf.app.flags.DEFINE_string(
+    'data_dir', './origin-data/road-train-2+valid.v2/train',
+    'path to training data')
+tf.app.flags.DEFINE_integer(
+    'num_epoch', 16, 'number of epochs to train'
+)
 
 
-def train(resume_dir=None):
-    """ Train the slim model.
-    Args:
-        resume_path (string): If set, resumes training from checkpoint file.
-    """
+def main(_):
+    summary_dir = FLAGS.summary_dir
+    res50_dir = FLAGS.CKPT_RES50
+    save_dir = FLAGS.save_dir
+    no_append = FLAGS.no_append
+    data_dir = FLAGS.data_dir
+    resume_dir = FLAGS.resume_dir
+    train(
+        data_dir=data_dir,
+        resume_dir=resume_dir,
+        save_dir=save_dir,
+        res50_dir=res50_dir,
+        summary_dir=summary_dir,
+        no_append=no_append
+    )
+
+
+def train(data_dir, resume_dir, save_dir, res50_dir, summary_dir,
+          no_append=False):
     settings = slim_model.Settings()
+    settings.num_epoch = FLAGS.num_epoch
     num_epoch = settings.num_epoch
     batch_size = settings.batch_size
     with tf.Session() as sess:
         m_train = slim_model.Model()
+        # print(m_train.bin_pred)
         optimizer = tf.train.AdamOptimizer(learning_rate=settings.learning_rate)
         global_step = tf.Variable(0, name='global_step', trainable=False)
         train_op = optimizer.minimize(
             m_train.dice_bce_loss, global_step=global_step)
         sess.run(tf.global_variables_initializer())
         saver_pre_trained = tf.train.Saver(m_train.pretrained_variables)
-        saver_pre_trained.restore(sess, CKPT_RES50)
+        saver_pre_trained.restore(sess, res50_dir)
         # saver_trainable = tf.train.Saver(m_train.trainable_variables)
         saver_all = tf.train.Saver()
-        if resume_dir is not None:
-            saver_all.restore(sess, resume_dir)
+        if resume_dir:
+            ckpt_state = tf.train.get_checkpoint_state(resume_dir)
+            ckpt_path = ckpt_state.model_checkpoint_path
+            saver_all.restore(sess, ckpt_path)
         print('restore complete')
         time_str = datetime.datetime.now().isoformat()
         time_str = time_str[:time_str.rfind('.')]
-        time_str = time_str.replace(':', '_')
         merged_summary = tf.summary.merge_all()
         summary_writer = tf.summary.FileWriter(
-            os.path.join(SUMMARY_DIR, time_str), sess.graph
+            os.path.join(summary_dir, time_str), sess.graph
         )
-        logger_path = os.path.join(SUMMARY_DIR, 'log-{}.txt'.format(time_str))
-        saver_path = os.path.join(SAVE_DIR, 'model_{}'.format(time_str))
-        os.makedirs(saver_path)
+        logger_path = os.path.join(summary_dir, 'log-{}.txt'.format(time_str))
+        if no_append:
+            saver_path = save_dir
+        else:
+            # create sub-directory under save_dir
+            saver_path = os.path.join(save_dir, 'model_{}'.format(time_str))
         time_start = time.time()
         for epoch in range(num_epoch):
-            # data loader
-            data_gen = data_loader.ImageLoader(buffer_size=200, shuffle=True, num_slices=2)
+            data_gen = data_loader.ImageLoader(
+                data_dir, buffer_size=200, shuffle=True)
             while not data_gen.finished():
                 inputs_x, inputs_y = data_gen.serve_data(batch_size)
                 feed_dict = {
@@ -73,6 +106,8 @@ def train(resume_dir=None):
                     with open(logger_path, 'a') as f:
                         print(msg, file=f)
                 if step % 1000 == 0:
+                    if not os.path.exists(saver_path):
+                        os.makedirs(saver_path)
                     path = saver_all.save(
                         sess, os.path.join(saver_path, 'res50_u_net'),
                         global_step=global_step
@@ -91,4 +126,4 @@ def train(resume_dir=None):
 
 
 if __name__ == '__main__':
-    train(resume_dir=None)
+    tf.app.run()

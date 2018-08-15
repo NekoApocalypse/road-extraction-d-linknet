@@ -7,29 +7,18 @@ import imageio
 import time
 
 # DATA_DIR = './origin-data/road-train-2+valid.v2/train'
-DATA_DIR = './contest_data/train_data'
 
 
 class ImageLoader(object):
-    def __init__(self, buffer_size=200, num_slices=1, shuffle=False,
-                 expand_y=False, data_dir=DATA_DIR):
-        """ Initialize Data Loader
-        Args:
-            buffer_size (int): Maxium number of items held in queue.
-            num_slices (int): If larger than one, slices the image in to n*n grids
-            shuffle (boolean): If True, shuffle input file order.
-            expand_y (boolean): If False, y will have shape [width, height]
-                If False, y will be expanded to [width, height, 1].
-            data_dir (string): Directory to read images from.
-
-        """
+    def __init__(self, data_dir, buffer_size=200, num_slices=1, shuffle=False,
+                 expand_y=False):
         self.expand_y = expand_y
         self.img_files = glob.glob(
-            os.path.join(data_dir, '*tif*')
+            os.path.join(data_dir, '*sat*')
         )
         self.img_files = sorted(self.img_files)
         self.mask_files = glob.glob(
-            os.path.join(data_dir, '*bmp*')
+            os.path.join(data_dir, '*mask*')
         )
         self.mask_files = sorted(self.mask_files)
 
@@ -54,12 +43,10 @@ class ImageLoader(object):
         self.worker.start()
 
     def _iter_list(self, file_list):
-        """ Helper function to construct a iterable file generator """
         for file in file_list:
             yield file
 
     def _grid_slice(self, array_in, num_slice):
-        """ Helper function to slice input image into n*n grids """
         v_slices = np.split(array_in, num_slice)
         frags = [
             frag for v_slice in v_slices
@@ -69,7 +56,6 @@ class ImageLoader(object):
         return frags
 
     def _fetch_data(self):
-        """ Helper function to fetch next image file and put into queue """
         while not self.eof:
             try:
                 img_name = next(self.img_iter)
@@ -93,16 +79,9 @@ class ImageLoader(object):
                 self.eof = True
 
     def finished(self):
-        """ Check if all data has been served """
         return self.eof and self.data_pipeline.empty()
 
     def serve_data(self, num_samples):
-        """ Server data from queue
-        Args:
-            num_samples (int): the number of samples per serve
-        Returns:
-            x_list, y_list (list): contains np.array as input samples.
-        """
         x_list = []
         y_list = []
         while num_samples > 0:
@@ -116,7 +95,6 @@ class ImageLoader(object):
         return x_list, y_list
 
     def join(self):
-        """ Join data queue """
         self.data_pipeline.join()
 
 
