@@ -15,7 +15,7 @@ class Settings(object):
         self.dim_y = 1024
         self.pretrained_model = 'RES50'
         self.learning_rate = 0.0001
-        self.num_epoch = 5
+        self.num_epoch = 16
         self.batch_size = 2
         self.threshold = 0.5
         self.dice_smooth = 1
@@ -79,8 +79,8 @@ class Model(object):
                                    activation=tf.nn.relu, padding='same')
             bridge_output.append(net)
             net = tf.add_n(bridge_output)
-        print('bridge output')
-        print(net)
+        # print('bridge output')
+        # print(net)
         with tf.variable_scope('decoder'):
             net = up_conv_block(net, 1024, 256)
             bridged = endpoints['resnet_v1_50/block3/unit_5/bottleneck_v1']
@@ -99,7 +99,6 @@ class Model(object):
             net = slim.conv2d_transpose(net, 32, [4, 4], stride=2)
             # 1024, 1024, 32
             net = slim.conv2d(net, 1, [3, 3], activation_fn=None)
-            # 1024, 1024, 1
         with tf.variable_scope('metrics'):
             self.output = net
             self.pred = tf.nn.sigmoid(net)
@@ -154,5 +153,25 @@ def unit_test():
         print(model.bce_loss)
 
 
+def collect_output_nodes():
+    settings = Settings()
+    with tf.Session() as sess:
+        model = Model()
+        sess.run(tf.global_variables_initializer())
+        saver = tf.train.Saver(model.pretrained_variables)
+        if settings.pretrained_model == 'VGG16':
+            saver.restore(sess, CKPT_VGG16)
+        elif settings.pretrained_model == 'RES50':
+            saver.restore(sess, CKPT_RES50)
+        print('restore complete')
+    output_nodes = [
+        model.pred,
+        model.bin_pred
+    ]
+    print(output_nodes)
+
+
 if __name__ == '__main__':
-    unit_test()
+    # unit_test()
+    collect_output_nodes()
+
