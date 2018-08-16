@@ -11,7 +11,7 @@ import imageio
 
 CKPT_RES50 = './pretrained-checkpoint/resnet_v1_50.ckpt'
 VALID_DIR = './origin-data/road-train-2+valid.v2/train_pick'
-CKPT_TRAINED = './model/archive_0803/res50_u_net-21000'
+CKPT_TRAINED = './model/archive_0804/res50_u_net-9000'
 CKPT_PARTIAL = False
 # CKPT_TRAINED = './model/archive_0709/res50_u_net-87438'
 # CKPT_PARTIAL = True
@@ -36,6 +36,7 @@ def test():
         valid_files = sorted(valid_files)
         for i, file in enumerate(test_files):
             id = file[:file.rfind('_')]
+            id = id + '_' + str(i%50)
             mask_file = '{}_out.jpg'.format(id)
             pred_file = '{}_pred.jpg'.format(id)
             input_x = imageio.imread(file)
@@ -56,6 +57,8 @@ def test():
                 )
             imageio.imwrite(mask_file, np.squeeze(bin_pred))
             imageio.imwrite(pred_file, np.squeeze(pred))
+            print('save to {}'.format(mask_file))
+            print('save to {}'.format(pred_file))
 
 
 if __name__ == '__main__':

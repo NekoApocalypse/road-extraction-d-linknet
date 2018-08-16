@@ -1,12 +1,14 @@
 import cv2
 import os
 import random
-import numpy as np
+import glob
+
 
 def read_as_array(filename):
     data_array = cv2.imread(filename)
 
     return data_array
+
 
 def random_split_array(img_array, label_array):
     incision_num = 50
@@ -65,6 +67,7 @@ def cross_incision(files):
                 cv2.imwrite(directory + 'cross/' + file_name + '_' + str(i) + '.bmp', new_bmp_arrays[i])
 
 def random_incision(files, directory):
+    dataPath = 'split_data/'
     for file in files:
         file_name = file.split('.')[0]
         file_format = file.split('.')[-1]
@@ -77,9 +80,50 @@ def random_incision(files, directory):
 
             print('random split ' + file_name)
             print(len(new_tif_arrays))
-            for i in range(len(new_tif_arrays)):
-                cv2.imwrite(directory + 'random/' + file_name + '_' + str(i) + '.tif', new_tif_arrays[i])
-                cv2.imwrite(directory + 'random/' + file_name + '_' + str(i) + '.bmp', new_bmp_arrays[i])
+            for i in range(len(new_tif_arrays)//100):
+                cv2.imwrite(directory + dataPath + file_name + '_' + str(i) + '.tif', new_tif_arrays[i])
+                cv2.imwrite(directory + dataPath + file_name + '_' + str(i) + '.bmp', new_bmp_arrays[i])
+
+    return directory + dataPath
+
+
+def train_test_divide(directory):
+    train_data_path = 'train_data'
+    test_data_path = 'test_data'
+
+    files = glob.glob(
+        os.path.join(directory, '*tif')
+    )
+    random.shuffle(files)
+    for i in range(int(len(files) * 0.8)):
+        img = cv2.imread(files[i])
+        filename = files[i].split('\\')[-1]
+        filename = filename.split('.')[0]
+
+        msk_name = directory + '/' + filename + '.bmp'
+        msk = cv2.imread(msk_name)
+
+        filename = directory + '/' + train_data_path + '/' + filename + '_sat.jpg'
+        new_msk_name = directory + '/' + test_data_path + filename + '_mask.png'
+
+        print(filename)
+        cv2.imwrite(filename, img)
+        cv2.imwrite(new_msk_name, msk)
+
+    for j in range(int(len(files)*0.8), len(files)):
+        img = cv2.imread(files[j])
+        filename = files[i].split('\\')[-1]
+        filename = filename.split('.')[0]
+
+        msk_name = directory + '/' + filename + '.bmp'
+        msk = cv2.imread(msk_name)
+
+        filename = directory + '/' + train_data_path + '/' + filename + '_sat.jpg'
+        new_msk_name = directory + '/' + test_data_path + filename + '_mask.png'
+
+        print(filename)
+        cv2.imwrite(filename, img)
+        cv2.imwrite(new_msk_name, msk)
 
 
 """
@@ -88,12 +132,13 @@ def random_incision(files, directory):
 """
 def split(files, directory, mode='cross'):
     if mode == 'cross':
-        cross_incision(files)
+        return cross_incision(files)
     elif mode == 'random':
-        random_incision(files, directory)
+        return random_incision(files, directory)
 
 
 if __name__ == '__main__':
     directory = './data/'
     files = os.listdir(directory)
-    split(files, directory, mode='random')
+    directory = split(files, directory, mode='random')
+    train_test_divide(directory)
