@@ -9,16 +9,6 @@ import os
 import glob
 import imageio
 
-<<<<<<< HEAD
-CKPT_RES50 = './pretrained-checkpoint/resnet_v1_50.ckpt'
-VALID_DIR = './origin-data/road-train-2+valid.v2/train_pick'
-CKPT_TRAINED = './model/archive_0804/res50_u_net-9000'
-CKPT_PARTIAL = False
-# CKPT_TRAINED = './model/archive_0709/res50_u_net-87438'
-# CKPT_PARTIAL = True
-
-def test():
-=======
 
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string(
@@ -37,7 +27,6 @@ def main(_):
 
 
 def test(valid_dir, ckpt_dir):
->>>>>>> 8cefab9d07ec7dfd9c8fd0deeb0414a41b213f1e
     settings = slim_model.Settings()
 
     checkpoint_state = tf.train.get_checkpoint_state(ckpt_dir)
@@ -58,16 +47,9 @@ def test(valid_dir, ckpt_dir):
         valid_files = sorted(valid_files)
         print('{} files to test from {}'.format(len(test_files), valid_dir))
         for i, file in enumerate(test_files):
-<<<<<<< HEAD
-            id = file[:file.rfind('_')]
-            id = id + '_' + str(i%50)
-            mask_file = '{}_out.jpg'.format(id)
-            pred_file = '{}_pred.jpg'.format(id)
-=======
             file_id = file[:file.rfind('_')]
             mask_file = '{}_out.jpg'.format(file_id)
             pred_file = '{}_pred.jpg'.format(file_id)
->>>>>>> 8cefab9d07ec7dfd9c8fd0deeb0414a41b213f1e
             input_x = imageio.imread(file)
             input_x = input_x.astype(np.float32) / 255.0
             print('testing {}'.format(file))
@@ -84,17 +66,10 @@ def test(valid_dir, ckpt_dir):
                     [m_test.pred, m_test.bin_pred],
                     feed_dict={m_test.input_x: [input_x]}
                 )
-<<<<<<< HEAD
-            imageio.imwrite(mask_file, np.squeeze(bin_pred))
-            imageio.imwrite(pred_file, np.squeeze(pred))
-            print('save to {}'.format(mask_file))
-            print('save to {}'.format(pred_file))
-=======
             bin_pred = np.squeeze((bin_pred * 255.0).astype(np.uint8))
             pred = np.squeeze((pred * 255.0).astype(np.uint8))
             imageio.imwrite(mask_file, bin_pred)
             imageio.imwrite(pred_file, pred)
->>>>>>> 8cefab9d07ec7dfd9c8fd0deeb0414a41b213f1e
 
 
 if __name__ == '__main__':
