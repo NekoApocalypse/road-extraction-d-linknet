@@ -6,3 +6,5 @@
 /__pycache__
 /nets
 /pretrained-checkpoint
+*.jpg
+*.png

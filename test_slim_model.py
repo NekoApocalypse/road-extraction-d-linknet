@@ -8,17 +8,12 @@ import time
 import os
 import glob
 import imageio
+from elephant_in_the_freezer import load_graph
 
-<<<<<<< HEAD
-CKPT_RES50 = './pretrained-checkpoint/resnet_v1_50.ckpt'
-VALID_DIR = './origin-data/road-train-2+valid.v2/train_pick'
-CKPT_TRAINED = './model/archive_0804/res50_u_net-9000'
-CKPT_PARTIAL = False
-# CKPT_TRAINED = './model/archive_0709/res50_u_net-87438'
-# CKPT_PARTIAL = True
 
-def test():
-=======
+# Force test to run on cpu only
+os.environ['CUDA_VISIBLE_DEVICES'] = ''
+
 
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string(
@@ -28,18 +23,50 @@ tf.app.flags.DEFINE_string(
     'ckpt_dir', './model/archive_0710',
     'path to saved model'
 )
+tf.app.flags.DEFINE_string(
+    'pb_dir', '',
+    'path to frozen model. If set, overrides ckpt_dir.'
+)
 
 
 def main(_):
     valid_dir = FLAGS.valid_dir
     ckpt_dir = FLAGS.ckpt_dir
-    test(valid_dir=valid_dir, ckpt_dir=ckpt_dir)
+    pb_dir = FLAGS.pb_dir
+    if pb_dir:
+        test_from_frozen_graph(valid_dir=valid_dir, pb_dir=pb_dir)
+    else:
+        test(valid_dir=valid_dir, ckpt_dir=ckpt_dir)
+
+
+def test_from_frozen_graph(valid_dir, pb_dir):
+    print('Testing from fronzen model')
+    graph, endpoints = load_graph(pb_dir)
+    x_tensor = endpoints['x']
+    pred_tensor = endpoints['pred']
+    bin_pred_tensor = endpoints['bin_pred']
+    with tf.Session(graph=graph) as sess:
+        test_files = glob.glob(os.path.join(valid_dir, '*sat*'))
+        test_files = sorted(test_files)
+        for i, file in enumerate(test_files):
+            file_id = file[:file.rfind('_')]
+            mask_file = '{}_out.jpg'.format(file_id)
+            pred_file = '{}_pred.jpg'.format(file_id)
+            input_x = imageio.imread(file)
+            input_x = input_x.astype(np.float32) / 255.0
+            print('testing {}'.format(file))
+            pred, bin_pred = sess.run(
+                [pred_tensor, bin_pred_tensor],
+                feed_dict={x_tensor: [input_x]}
+            )
+            bin_pred = np.squeeze((bin_pred * 255.0).astype(np.uint8))
+            pred = np.squeeze((pred * 255.0).astype(np.uint8))
+            imageio.imwrite(mask_file, bin_pred)
+            imageio.imwrite(pred_file, pred)
 
 
 def test(valid_dir, ckpt_dir):
->>>>>>> 8cefab9d07ec7dfd9c8fd0deeb0414a41b213f1e
     settings = slim_model.Settings()
-
     checkpoint_state = tf.train.get_checkpoint_state(ckpt_dir)
     if not checkpoint_state:
         raise AssertionError('No valid checkpoints found in directory' +
@@ -58,16 +85,9 @@ def test(valid_dir, ckpt_dir):
         valid_files = sorted(valid_files)
         print('{} files to test from {}'.format(len(test_files), valid_dir))
         for i, file in enumerate(test_files):
-<<<<<<< HEAD
-            id = file[:file.rfind('_')]
-            id = id + '_' + str(i%50)
-            mask_file = '{}_out.jpg'.format(id)
-            pred_file = '{}_pred.jpg'.format(id)
-=======
             file_id = file[:file.rfind('_')]
             mask_file = '{}_out.jpg'.format(file_id)
             pred_file = '{}_pred.jpg'.format(file_id)
->>>>>>> 8cefab9d07ec7dfd9c8fd0deeb0414a41b213f1e
             input_x = imageio.imread(file)
             input_x = input_x.astype(np.float32) / 255.0
             print('testing {}'.format(file))
@@ -84,17 +104,10 @@ def test(valid_dir, ckpt_dir):
                     [m_test.pred, m_test.bin_pred],
                     feed_dict={m_test.input_x: [input_x]}
                 )
-<<<<<<< HEAD
-            imageio.imwrite(mask_file, np.squeeze(bin_pred))
-            imageio.imwrite(pred_file, np.squeeze(pred))
-            print('save to {}'.format(mask_file))
-            print('save to {}'.format(pred_file))
-=======
             bin_pred = np.squeeze((bin_pred * 255.0).astype(np.uint8))
             pred = np.squeeze((pred * 255.0).astype(np.uint8))
             imageio.imwrite(mask_file, bin_pred)
             imageio.imwrite(pred_file, pred)
->>>>>>> 8cefab9d07ec7dfd9c8fd0deeb0414a41b213f1e
 
 
 if __name__ == '__main__':

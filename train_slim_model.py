@@ -99,6 +99,7 @@ def train(data_dir, resume_dir, save_dir, res50_dir, summary_dir,
                 if step % 10 == 0:
                     time_str = datetime.datetime.now().isoformat()
                     time_str = time_str[:time_str.rfind('.')]
+                    time_str = time_str.replace(':', '-')
                     msg = '{}:step{}, loss: {:g}, iou: {:g}, dice_coeff: {:g}, x_sum: {:g}, x_bin_sum: {:g}, y_sum: {:g}'.format(
                         time_str, step, loss, iou, dice_coeff, x_sum, x_bin_sum, y_sum
                     )
