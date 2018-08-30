@@ -31,8 +31,12 @@ def load_graph(pb_dir):
     return graph, endpoints
 
 
-if __name__ == '__main__':
+def unit_test():
     pb_dir = './model/dt_0815_resume'
     graph, endpoints = load_graph(pb_dir)
     [print(endpoint) for endpoint in endpoints.items()]
     print(endpoints['x'])
+
+
+if __name__ == '__main__':
+    unit_test()

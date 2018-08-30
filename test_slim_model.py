@@ -12,7 +12,7 @@ from elephant_in_the_freezer import load_graph
 
 
 # Force test to run on cpu only
-os.environ['CUDA_VISIBLE_DEVICES'] = ''
+# os.environ['CUDA_VISIBLE_DEVICES'] = ''
 
 
 FLAGS = tf.app.flags.FLAGS
