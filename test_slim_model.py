@@ -17,14 +17,14 @@ from elephant_in_the_freezer import load_graph
 
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string(
-    'input_dir', './origin-data/road-train-2+valid.v2/valid',
+    'input_dir', '',
     'path to input files')
 tf.app.flags.DEFINE_string(
     'output_dir', '',
     'path to output files'
 )
 tf.app.flags.DEFINE_string(
-    'ckpt_dir', './model/archive_0710',
+    'ckpt_dir', '',
     'path to saved model'
 )
 tf.app.flags.DEFINE_string(
@@ -38,6 +38,21 @@ def main(_):
     output_dir = FLAGS.output_dir
     ckpt_dir = FLAGS.ckpt_dir
     pb_dir = FLAGS.pb_dir
+    # path assertion
+    assert os.path.isdir(input_dir),\
+        'Error, input_dir must be a directory'
+    if output_dir:
+        assert os.path.isdir(output_dir),\
+            'Error, output_dir must be a directory'
+    if pb_dir:
+        assert os.path.isdir(pb_dir),\
+            'Error, pb_dir must be a directory'
+    elif ckpt_dir:
+        assert os.path.isdir(ckpt_dir),\
+            'Error, ckpt_dir must be a directory'
+    else:
+        raise(AssertionError('Error, either ckpt_dir or pb_dir must be set'))
+
     if pb_dir:
         test_from_frozen_graph(
             input_dir=input_dir,
