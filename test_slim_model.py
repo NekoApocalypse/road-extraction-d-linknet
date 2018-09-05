@@ -53,6 +53,8 @@ def main(_):
     else:
         raise(AssertionError('Error, either ckpt_dir or pb_dir must be set'))
 
+    if not output_dir:
+        output_dir = input_dir
     if pb_dir:
         test_from_frozen_graph(
             input_dir=input_dir,
@@ -60,7 +62,10 @@ def main(_):
             pb_dir=pb_dir
         )
     else:
-        test(valid_dir=input_dir, ckpt_dir=ckpt_dir)
+        test(input_dir=input_dir,
+             output_dir=output_dir,
+             ckpt_dir=ckpt_dir
+        )
 
 
 def test_from_frozen_graph(input_dir, output_dir, pb_dir):
@@ -73,14 +78,10 @@ def test_from_frozen_graph(input_dir, output_dir, pb_dir):
         test_files = glob.glob(os.path.join(input_dir, '*sat*'))
         test_files = sorted(test_files)
         for i, file in enumerate(test_files):
-            if output_dir:
-                write_path = output_dir
-            else:
-                write_path = os.path.dirname(file)
             file_name = os.path.basename(file)
             file_id = file_name[:file_name.rfind('_')]
-            mask_file = '{}_out.jpg'.format(os.path.join(write_path, file_id))
-            pred_file = '{}_pred.jpg'.format(os.path.join(write_path, file_id))
+            mask_file = '{}_out.bmp'.format(os.path.join(output_dir, file_id))
+            pred_file = '{}_pred.bmp'.format(os.path.join(output_dir, file_id))
             input_x = imageio.imread(file)
             input_x = input_x.astype(np.float32) / 255.0
             print('testing {}'.format(file))
@@ -96,7 +97,7 @@ def test_from_frozen_graph(input_dir, output_dir, pb_dir):
             imageio.imwrite(pred_file, pred)
 
 
-def test(valid_dir, ckpt_dir):
+def test(input_dir, output_dir, ckpt_dir):
     settings = slim_model.Settings()
     checkpoint_state = tf.train.get_checkpoint_state(ckpt_dir)
     if not checkpoint_state:
@@ -110,15 +111,16 @@ def test(valid_dir, ckpt_dir):
         saver_all = tf.train.Saver()
         saver_all.restore(sess, input_checkpoint)
         print('restore complete')
-        test_files = glob.glob(os.path.join(valid_dir, '*sat*'))
-        valid_files = glob.glob(os.path.join(valid_dir, '*mask*'))
+        test_files = glob.glob(os.path.join(input_dir, '*sat*'))
+        valid_files = glob.glob(os.path.join(input_dir, '*mask*'))
         test_files = sorted(test_files)
         valid_files = sorted(valid_files)
-        print('{} files to test from {}'.format(len(test_files), valid_dir))
+        print('{} files to test from {}'.format(len(test_files), input_dir))
         for i, file in enumerate(test_files):
-            file_id = file[:file.rfind('_')]
-            mask_file = '{}_out.jpg'.format(file_id)
-            pred_file = '{}_pred.jpg'.format(file_id)
+            file_name = os.path.basename(file)
+            file_id = file_name[:file_name.rfind('_')]
+            mask_file = '{}_out.bmp'.format(os.path.join(output_dir, file_id))
+            pred_file = '{}_pred.bmp'.format(os.path.join(output_dir, file_id))
             input_x = imageio.imread(file)
             input_x = input_x.astype(np.float32) / 255.0
             print('testing {}'.format(file))
