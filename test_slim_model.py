@@ -17,8 +17,12 @@ from elephant_in_the_freezer import load_graph
 
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string(
-    'valid_dir', './origin-data/road-train-2+valid.v2/valid',
-    'path to valid files')
+    'input_dir', './origin-data/road-train-2+valid.v2/valid',
+    'path to input files')
+tf.app.flags.DEFINE_string(
+    'output_dir', '',
+    'path to output files'
+)
 tf.app.flags.DEFINE_string(
     'ckpt_dir', './model/archive_0710',
     'path to saved model'
@@ -30,28 +34,38 @@ tf.app.flags.DEFINE_string(
 
 
 def main(_):
-    valid_dir = FLAGS.valid_dir
+    input_dir = FLAGS.input_dir
+    output_dir = FLAGS.output_dir
     ckpt_dir = FLAGS.ckpt_dir
     pb_dir = FLAGS.pb_dir
     if pb_dir:
-        test_from_frozen_graph(valid_dir=valid_dir, pb_dir=pb_dir)
+        test_from_frozen_graph(
+            input_dir=input_dir,
+            output_dir=output_dir,
+            pb_dir=pb_dir
+        )
     else:
-        test(valid_dir=valid_dir, ckpt_dir=ckpt_dir)
+        test(valid_dir=input_dir, ckpt_dir=ckpt_dir)
 
 
-def test_from_frozen_graph(valid_dir, pb_dir):
+def test_from_frozen_graph(input_dir, output_dir, pb_dir):
     print('Testing from fronzen model')
     graph, endpoints = load_graph(pb_dir)
     x_tensor = endpoints['x']
     pred_tensor = endpoints['pred']
     bin_pred_tensor = endpoints['bin_pred']
     with tf.Session(graph=graph) as sess:
-        test_files = glob.glob(os.path.join(valid_dir, '*sat*'))
+        test_files = glob.glob(os.path.join(input_dir, '*sat*'))
         test_files = sorted(test_files)
         for i, file in enumerate(test_files):
-            file_id = file[:file.rfind('_')]
-            mask_file = '{}_out.jpg'.format(file_id)
-            pred_file = '{}_pred.jpg'.format(file_id)
+            if output_dir:
+                write_path = output_dir
+            else:
+                write_path = os.path.dirname(file)
+            file_name = os.path.basename(file)
+            file_id = file_name[:file_name.rfind('_')]
+            mask_file = '{}_out.jpg'.format(os.path.join(write_path, file_id))
+            pred_file = '{}_pred.jpg'.format(os.path.join(write_path, file_id))
             input_x = imageio.imread(file)
             input_x = input_x.astype(np.float32) / 255.0
             print('testing {}'.format(file))
@@ -61,7 +75,9 @@ def test_from_frozen_graph(valid_dir, pb_dir):
             )
             bin_pred = np.squeeze((bin_pred * 255.0).astype(np.uint8))
             pred = np.squeeze((pred * 255.0).astype(np.uint8))
+            print('    Saving to {}'.format(mask_file))
             imageio.imwrite(mask_file, bin_pred)
+            print('    Saving to {}'.format(pred_file))
             imageio.imwrite(pred_file, pred)
 
 

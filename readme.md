@@ -51,12 +51,18 @@ Run `test_slim_model.py`
 
 Options:
 
-`--valid_dir=<path>`
+`--input_dir=<path>`
 
     Path to test files.
-    Satellite image files should have name like *sat*.
-    Label images (if present) should have name like *mask*.
+    Satellite image files should have name like `_sat.*`.
+    Label images (if present) should have name like `_mask.*`.
     If label images are present, iou and loss will be computed.
+    
+`--output_dir=<path>`
+
+    Path to save results.
+    If set, save prediction files to <path>.
+    Otherwise results will be saved to input_dir
     
 `--ckpt_dir=<path>`
 
@@ -72,5 +78,5 @@ Run `freezer.py`
 
 Options:
 
-`--ckpt_dir`
+`--ckpt_dir=<path>`
     Path to checkpoint files.

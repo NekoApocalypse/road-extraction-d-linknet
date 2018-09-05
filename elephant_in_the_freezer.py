@@ -18,7 +18,7 @@ def load_graph(pb_dir):
     # Binary Prediction: 'prefix/metrics/Sigmoid'
     # Float Prediction: 'prefix/metrics/Cast'
     names = [op.name for op in graph.get_operations()]
-    [print(name) for name in names]
+    # [print(name) for name in names]
     x = graph.get_tensor_by_name('model/input_x:0')
     pred = graph.get_tensor_by_name('model/metrics/Sigmoid:0')
     bin_pred = graph.get_tensor_by_name('model/metrics/Cast:0')
