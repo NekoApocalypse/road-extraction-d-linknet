@@ -26,7 +26,24 @@ tf.app.flags.DEFINE_integer(
 )
 
 
+def assert_flags():
+    assert os.path.isdir(FLAGS.summary_dir),\
+        'Error, summary_dir must be a directory.'
+    assert os.path.isfile(FLAGS.CKPT_RES50),\
+        'Error, Res50 Model files not found. Please refer to readme.md.'
+    assert os.path.isdir(FLAGS.save_dir),\
+        'Error, save_dir must be a directory'
+    if FLAGS.resume_dir:
+        assert os.path.isdir(FLAGS.resume_dir),\
+            'Error, resume_dir must be a directory'
+    else:
+        print('No resume_dir appointed, training from scratch.')
+    assert os.path.isdir(FLAGS.data_dir),\
+        'Error, data_dir must be a directory'
+
+
 def main(_):
+    assert_flags()
     summary_dir = FLAGS.summary_dir
     res50_dir = FLAGS.CKPT_RES50
     save_dir = FLAGS.save_dir
