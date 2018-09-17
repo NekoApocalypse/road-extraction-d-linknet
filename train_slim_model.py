@@ -17,12 +17,18 @@ tf.app.flags.DEFINE_string('save_dir', './model', 'path to save model')
 tf.app.flags.DEFINE_string('resume_dir', '', 'path to resume training')
 tf.app.flags.DEFINE_boolean(
     'no_append', False,
-    'If false, create sub folder with time string under save_dir')
+    'If set, model will be saved directly under `save_dir`. ' +
+    'No sub directory will be made.'
+)
 tf.app.flags.DEFINE_string(
     'data_dir', './origin-data/road-train-2+valid.v2/train',
     'path to training data')
 tf.app.flags.DEFINE_integer(
     'num_epoch', 16, 'number of epochs to train'
+)
+tf.app.flags.DEFINE_boolear(
+    'partial_train', False,
+    'If true, parameters in Res50 will not be updated.'
 )
 
 
@@ -50,18 +56,20 @@ def main(_):
     no_append = FLAGS.no_append
     data_dir = FLAGS.data_dir
     resume_dir = FLAGS.resume_dir
+    partial_train = FLAGS.partial_train
     train(
         data_dir=data_dir,
         resume_dir=resume_dir,
         save_dir=save_dir,
         res50_dir=res50_dir,
         summary_dir=summary_dir,
-        no_append=no_append
+        no_append=no_append,
+        partial_train=partial_train
     )
 
 
 def train(data_dir, resume_dir, save_dir, res50_dir, summary_dir,
-          no_append=False):
+          no_append=False, partial_train=False):
     settings = slim_model.Settings()
     settings.num_epoch = FLAGS.num_epoch
     num_epoch = settings.num_epoch
@@ -71,8 +79,15 @@ def train(data_dir, resume_dir, save_dir, res50_dir, summary_dir,
         # print(m_train.bin_pred)
         optimizer = tf.train.AdamOptimizer(learning_rate=settings.learning_rate)
         global_step = tf.Variable(0, name='global_step', trainable=False)
-        train_op = optimizer.minimize(
-            m_train.dice_bce_loss, global_step=global_step)
+        if not partial_train:
+            train_op = optimizer.minimize(
+                m_train.dice_bce_loss, global_step=global_step)
+        else:
+            train_op = optimizer.minimize(
+                m_train.dice_bce_loss,
+                global_step=global_step,
+                var_list=m_train.trainable_variables
+            )
         sess.run(tf.global_variables_initializer())
         saver_pre_trained = tf.train.Saver(m_train.pretrained_variables)
         saver_pre_trained.restore(sess, res50_dir)

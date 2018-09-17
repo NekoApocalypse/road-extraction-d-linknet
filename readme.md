@@ -44,6 +44,10 @@ Options:
 `--num_epoch=<int>`
 
     Specify number of epochs to train. Default to 16.
+ 
+`--partial_train`
+
+    If set, parameters in Res50 model will not be updated.
 
 ### To Test:
 
