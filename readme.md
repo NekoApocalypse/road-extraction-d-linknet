@@ -1,14 +1,34 @@
-# Road Extraction with D-Link Net
+# D-LinkNet For Road Extraction
+
+TensorFlow implementation of D-LinkNet for road extraction.
+Details can be found in this paper:
+
+[D-LinkNet: LinkNet with Pretrained Encoder and Dilated Convolution for High
+Resolution Satellite Imagery Road Extraction](http://openaccess.thecvf.com/content_cvpr_2018_workshops/papers/w4/Zhou_D-LinkNet_LinkNet_With_CVPR_2018_paper.pdf)
+
+This model uses ResNet 50 provided by TensorFlow-Slim as encoder.
+See setting up section for more information.
+
+Dataset is from [DeepGlobe Road Extraction Challenge](https://competitions.codalab.org/competitions/18467#participate-get_starting_kit).
+
+## Requirements
+* Python 3.5
+* CUDA 9.0
+* TensorFlow 1.10
 
 ## Setting Up
 
-Before training this model, download `net` folder from https://github.com/tensorflow/models/tree/master/research/slim and place in the root directory of this project. This contains necessary files to construct the Res50 model.
+Before training this model, download `net` folder from 
+https://github.com/tensorflow/models/tree/master/research/slim
+and place in the root directory of this project. 
+
+This contains necessary files to construct the Res50 model.
 
 ## Usage
 
 ### To Train:
 
-Run `train_slim_model.py`
+Run `python ./train_slim_model.py`
 
 Options:
 
@@ -51,7 +71,7 @@ Options:
 
 ### To Test:
 
-Run `test_slim_model.py`
+Run `python ./test_slim_model.py`
 
 Options:
 
@@ -78,7 +98,7 @@ Options:
     
 ### To Generate Frozen Graph:
 
-Run `freezer.py`
+Run `python ./freezer.py`
 
 Options:
 
