@@ -26,7 +26,7 @@ This contains necessary files to construct the Res50 model.
 
 ## Usage
 
-### To Train:
+### Train:
 
 Run `python ./train_slim_model.py`
 
@@ -69,7 +69,7 @@ Options:
 
     If set, parameters in Res50 model will not be updated.
 
-### To Test:
+### Test:
 
 Run `python ./test_slim_model.py`
 
@@ -96,7 +96,7 @@ Options:
 
     If set, load model from frozen graph. This option overrides `ckpt_dir`.
     
-### To Generate Frozen Graph:
+### Generate Frozen Graph:
 
 Run `python ./freezer.py`
 
