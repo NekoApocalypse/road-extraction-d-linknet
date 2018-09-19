@@ -1,6 +1,8 @@
 # D-LinkNet For Road Extraction
 
 TensorFlow implementation of D-LinkNet for road extraction.
+![](etc/tiles.png)
+
 Details can be found in this paper:
 
 [D-LinkNet: LinkNet with Pretrained Encoder and Dilated Convolution for High
