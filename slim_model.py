@@ -20,6 +20,7 @@ class Settings(object):
         self.threshold = 0.5
         self.dice_smooth = 1
         self.bce_dice_weights = (0.5, 0.5)
+        self.l2_weight = 0.0001
 
 
 def print_endpoints(endpoints, file_name):
@@ -126,6 +127,15 @@ class Model(object):
             tf.summary.scalar('bce_loss', self.bce_loss)
             tf.summary.scalar('dice_coeff', self.dice_coeff)
             tf.summary.scalar('bce_dice_loss', self.dice_bce_loss)
+            # Regularization
+            self.l2_loss = tf.contrib.layers.apply_regularization(
+                regularizer=tf.contrib.layers.l2_regularizer(settings.l2_weight),
+                weights_list=tf.trainable_variables()
+            )
+            self.dice_bce_l2_loss = self.dice_bce_loss + self.l2_loss
+            tf.summary.scalar('l2_loss', self.l2_loss)
+            tf.summary.scalar('dice_bce_l2_loss', self.dice_bce_l2_loss)
+
         self.pretrained_variables = pretrained_variables
         self.pretrained_endpoints = endpoints
         self.trainable_variables = []
@@ -151,6 +161,7 @@ def unit_test():
         print(model.output)
         print(model.trainable_variables)
         print(model.bce_loss)
+        print(model.dice_bce_l2_loss)
 
 
 def collect_output_nodes():
@@ -172,6 +183,6 @@ def collect_output_nodes():
 
 
 if __name__ == '__main__':
-    # unit_test()
+    unit_test()
     collect_output_nodes()
 
